@@ -1,18 +1,75 @@
 import { useState } from "react";
-
+import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import {
+  GET_TRANSACTION,
+  GET_TRANSACTIONS,
+  GET_TRANSACTION_STATISTICS,
+} from "../graphql/queries/transaction.query";
+import { useEffect } from "react";
+import { useMutation, useQuery } from "@apollo/client";
+import { UPDATE_TRANSACTION } from "../graphql/mutations/transcation.mutation";
+import toast from "react-hot-toast";
+import TransactionFormSkeleton from "../components/skeltons/TransactionSkeleton";
 const TransactionPage = () => {
-  const [formData, setFormData] = useState({
-    description: "",
-    paymentType: "",
-    category: "",
-    amount: "",
-    location: "",
-    date: "",
-  });
+  const { id } = useParams();
+  const navigate = useNavigate();
 
+  const { loading, data, error } = useQuery(GET_TRANSACTION, {
+    variables: { id: id },
+  });
+console.log("GetTransaction",data)
+  const [updateTransaction, { loading: loadingUpdate }] = useMutation(
+    UPDATE_TRANSACTION,
+    {
+      refetchQueries: [
+        { query: GET_TRANSACTIONS },
+        { query: GET_TRANSACTION_STATISTICS },
+      ],
+    }
+  );
+
+  const [formData, setFormData] = useState({
+    description: data?.transaction?.description || "",
+    paymentType: data?.transaction?.paymentType || "",
+    category: data?.transaction?.category || "",
+    amount: data?.transaction?.amount || "",
+    location: data?.transaction?.location || "",
+    date: data?.transaction?.data || "",
+  });
+  useEffect(() => {
+    if (data) {
+      setFormData({
+        description: data?.transaction?.description,
+        paymentType: data?.transaction?.paymentType,
+        category: data?.transaction?.category,
+        amount: data?.transaction?.amount,
+        location: data?.transaction?.location,
+        date: new Date(+data?.transaction?.date).toISOString().substr(0, 10),
+      });
+    }
+  }, [data]);
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("formData", formData);
+    const amount = parseFloat(formData.amount); //convert amount to number
+    try {
+      await updateTransaction({
+        variables: {
+          input: {
+            ...formData,
+            amount,
+            transactionId: id,
+          },
+        },
+        refetchQueries: [
+          { query: GET_TRANSACTIONS }, // Refetch the query for all transactions
+        ],
+      });
+      toast.success("Transaction updated sucessfullly");
+      navigate("/");
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,11 +79,16 @@ const TransactionPage = () => {
     }));
   };
 
-  // if (loading) return <TransactionFormSkeleton />;
+  if (loading) return <TransactionFormSkeleton />;
+  // Show loading state or error
 
   return (
     <div className="h-screen max-w-4xl mx-auto flex flex-col items-center">
-      <p className="md:text-4xl text-2xl lg:text-4xl font-bold text-center relative z-50 mb-4 mr-4 bg-gradient-to-r from-pink-600 via-indigo-500 to-pink-400 inline-block text-transparent bg-clip-text">
+      <p
+        className="md:text-4xl text-2xl lg:text-4xl font-bold text-center 
+      relative z-50 mb-4 mr-4 bg-gradient-to-r from-pink-600 via-indigo-500 to-pink-400 inline-block 
+      text-transparent bg-clip-text"
+      >
         Update this transaction
       </p>
       <form
@@ -43,7 +105,8 @@ const TransactionPage = () => {
               Transaction
             </label>
             <input
-              className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+              className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 
+              leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
               id="description"
               name="description"
               type="text"
@@ -64,7 +127,8 @@ const TransactionPage = () => {
             </label>
             <div className="relative">
               <select
-                className="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                className="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded 
+                leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                 id="paymentType"
                 name="paymentType"
                 onChange={handleInputChange}
@@ -182,8 +246,9 @@ const TransactionPage = () => {
           className="text-white font-bold w-full rounded px-4 py-2 bg-gradient-to-br
           from-pink-500 to-pink-500 hover:from-pink-600 hover:to-pink-600"
           type="submit"
+          disabled={loadingUpdate}
         >
-          Update Transaction
+          {loadingUpdate ? "updating..." : "updateTransaction"}
         </button>
       </form>
     </div>

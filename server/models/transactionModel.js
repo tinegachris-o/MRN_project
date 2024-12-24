@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-const transcationSchema = new mongoose.Schema(
+const transactionSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -13,7 +13,7 @@ const transcationSchema = new mongoose.Schema(
       type: String,
       enum: ["saving", "expense", "investment"],
     },
-    ammount: {
+    amount: {
       type: Number,
       required: true,
     },
@@ -22,11 +22,11 @@ const transcationSchema = new mongoose.Schema(
       default: "uknown",
     },
     date: {
-      type: Number,
+      type: Date,
       required: true,
     },
   },
   { timestamps: true }
 );
-const Transcation = mongoose.model("Transcation", transcationSchema);
-export default Transcation;
+const Transaction = mongoose.model("Transaction", transactionSchema);
+export default Transaction;

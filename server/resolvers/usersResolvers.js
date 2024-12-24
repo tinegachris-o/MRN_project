@@ -1,5 +1,6 @@
-import { users } from "../dummyData/data.js";
+import { transactions, users } from "../dummyData/data.js";
 import User from "../models/userModel.js";
+import Transaction from "../models/transactionModel.js"
 import bcrypt from "bcryptjs";
 const usersResolvers = {
   Mutation: {
@@ -84,5 +85,19 @@ const usersResolvers = {
     },
   },
   //TODO ADD USER TRANSCATION RELATIONSHIP
+
+
+  User:{
+    transactions:async(parent)=>{
+try {
+  const transactions= await Transaction.find({userId:parent._id})
+  return transactions
+} catch (error) {
+  console.log("error in transaction error resolver",error)
+        throw new Error(error.message || "internal server Error");
+
+}
+    }
+  }
 };
 export default usersResolvers;

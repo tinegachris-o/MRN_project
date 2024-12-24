@@ -62,6 +62,7 @@ const server = new ApolloServer({
 await server.start();
 
 // Apply CORS middleware specifically for `/graphql`
+
 app.use(
   "/graphql",
   cors({
@@ -69,11 +70,18 @@ app.use(
     credentials: true, // Allow cookies
   }),
   expressMiddleware(server, {
-    context: async ({ req, res }) => buildContext({ req, res }),
+    context: async ({ req, res }) => {
+      const context = buildContext({ req, res });
+      return {
+        ...context,
+        getUser: context.getUser, // Ensure getUser is explicitly available
+      };
+    },
   })
 );
 
-// Global error handling middleware
+
+//// Global error handling middleware
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).send("Something went wrong");

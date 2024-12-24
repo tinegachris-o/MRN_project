@@ -6,41 +6,83 @@ import TransactionForm from "../components/TransactionForm";
 
 import { MdLogout } from "react-icons/md";
 import toast from "react-hot-toast";
-import { useMutation } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import { LOGOUT } from "../graphql/mutations/user.mutation";
+import { useNavigate } from "react-router-dom";
 import { GET_AUTHENTICATED_USER } from "../graphql/queries/user.query.js";
+import { GET_TRANSACTION_STATISTICS } from "../graphql/queries/transaction.query.js";
+import { useEffect, useState } from "react";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const HomePage = () => {
-  const chartData = {
-    labels: ["Saving", "Expense", "Investment"],
+  const { data } = useQuery(GET_TRANSACTION_STATISTICS);
+  const { data:authUserData } = useQuery(GET_AUTHENTICATED_USER);
+
+  const [logout, { loading, client }] = useMutation(LOGOUT, {
+    refetchQueries: [{ query: GET_AUTHENTICATED_USER }],
+  });
+  const navigate = useNavigate();
+
+  const [chartData, setChartData] = useState({
+    labels: [],
     datasets: [
       {
-        label: "%",
-        data: [13, 8, 3],
-        backgroundColor: [
-          "rgba(75, 192, 192)",
-          "rgba(255, 99, 132)",
-          "rgba(54, 162, 235)",
-        ],
-        borderColor: [
-          "rgba(75, 192, 192)",
-          "rgba(255, 99, 132)",
-          "rgba(54, 162, 235, 1)",
-        ],
+        label: "$",
+        data: [],
+        backgroundColor: [],
+        borderColor: [],
         borderWidth: 1,
         borderRadius: 30,
         spacing: 10,
         cutout: 130,
       },
     ],
-  };
-  const [logout, { loading }] = useMutation(LOGOUT);
-  refetchQueries: ["GetAuthenticatedUser"];
+  });
+
+  useEffect(() => {
+    if (data?.categoryStatistics) {
+      const categories = data.categoryStatistics.map((stat) => stat.category);
+      const totalAmounts = data.categoryStatistics.map(
+        (stat) => stat.totalAmount
+      );
+
+      const backgroundColors = [];
+      const borderColors = [];
+
+      categories.forEach((category) => {
+        if (category === "saving") {
+          backgroundColors.push("rgba(75, 192, 192)");
+          borderColors.push("rgba(75, 192, 192)");
+        } else if (category === "expense") {
+          backgroundColors.push("rgba(255, 99, 132)");
+          borderColors.push("rgba(255, 99, 132)");
+        } else if (category === "investment") {
+          backgroundColors.push("rgba(54, 162, 235)");
+          borderColors.push("rgba(54, 162, 235)");
+        }
+      });
+
+      setChartData((prev) => ({
+        labels: categories,
+        datasets: [
+          {
+            ...prev.datasets[0],
+            data: totalAmounts,
+            backgroundColor: backgroundColors,
+            borderColor: borderColors,
+          },
+        ],
+      }));
+    }
+  }, [data]);
+
   const handleLogout = async () => {
     try {
       await logout();
       // clear cache
+      client.resetStore();
+          navigate("/");
+
     } catch (error) {
       toast.error(error.message);
     }
@@ -54,7 +96,7 @@ const HomePage = () => {
             Spend wisely, track wisely
           </p>
           <img
-            src={"https://tecdn.b-cdn.net/img/new/avatars/2.webp"}
+            src={authUserData?.authUser.profilePicture}
             className="w-11 h-11 rounded-full border cursor-pointer"
             alt="Avatar"
           />
@@ -70,9 +112,11 @@ const HomePage = () => {
           )}
         </div>
         <div className="flex flex-wrap w-full justify-center items-center gap-6">
-          <div className="h-[330px] w-[330px] md:h-[360px] md:w-[360px]  ">
-            <Doughnut data={chartData} />
-          </div>
+          {data?.categoryStatistics.length > 0 && (
+            <div className="h-[330px] w-[330px] md:h-[360px] md:w-[360px]  ">
+              <Doughnut data={chartData} />
+            </div>
+          )}
 
           <TransactionForm />
         </div>

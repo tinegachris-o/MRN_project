@@ -119,6 +119,7 @@ const SignUpPage = () => {
                 <Link to="/login" className="text-black hover:underline">
                   Login here
                 </Link>
+                
               </p>
             </div>
           </div>

@@ -1,4 +1,15 @@
+import {useMutation} from '@apollo/client'
+import {CREATE_TRANSACTION} from "../graphql/mutations/transcation.mutation"
+import toast from 'react-hot-toast'
+import { GET_TRANSACTIONS,GET_TRANSACTION_STATISTICS } from '../graphql/queries/transaction.query';
 const TransactionForm = () => {
+  const [createTransaction, { loading }] = useMutation(CREATE_TRANSACTION, {
+    //refetchQueries:["GetTransactions"]
+    refetchQueries: [
+      { query: GET_TRANSACTIONS },
+      { query: GET_TRANSACTION_STATISTICS },
+    ],
+  });
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -12,7 +23,15 @@ const TransactionForm = () => {
       location: formData.get("location"),
       date: formData.get("date"),
     };
-    console.log("transactionData", transactionData);
+    try {
+      await createTransaction({variables:{input:transactionData}})
+      form.reset()
+      toast.success("transaction created sucessfully")
+          //console.log("transactionData", transactionData);
+
+    } catch (error) {
+      toast.error(error.message)
+    }
   };
 
   return (
@@ -63,6 +82,8 @@ const TransactionForm = () => {
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
               >
+                Failed to load resource: the server responded with a status of
+                400 (Bad Request)
                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
               </svg>
             </div>
@@ -159,8 +180,9 @@ const TransactionForm = () => {
           from-pink-500 to-pink-500 hover:from-pink-600 hover:to-pink-600
 						disabled:opacity-70 disabled:cursor-not-allowed"
         type="submit"
+        disabled={loading}
       >
-        Add Transaction
+        {loading ? "Loading" : "Add Transaction"}
       </button>
     </form>
   );

@@ -1,8 +1,8 @@
-import Transcation from "../models/transcationModel.js";
-
-const transcationResolvers = {
+import Transaction from "../models/transactionModel.js";
+import mongoose from "mongoose";
+const transactionResolvers = {
   Query: {
-    transcations: async (_, context) => {
+    transactions: async (_, __, context) => {
       try {
         // Check if the user is authenticated
         if (!context.getUser()) throw new Error("Unauthorized");
@@ -10,7 +10,8 @@ const transcationResolvers = {
         const userId = context.getUser()._id;
 
         // Fetch transactions for the authenticated user
-        const transactions = await Transcation.find({ userId });
+        const transactions = await Transaction.find({ userId });
+
         return transactions;
       } catch (error) {
         console.error("Error getting transactions:", error);
@@ -19,37 +20,73 @@ const transcationResolvers = {
     },
 
     // Resolver for fetching a single transaction by ID
-    transcation: async (_, { transactionId }, context) => {
+    transaction: async (_, { transactionId }, context) => {
       try {
         // Check if the user is authenticated
+        // console.log("Fetching transaction with ID:", transactionId);
+
         if (!context.getUser()) throw new Error("Unauthorized");
 
         // Fetch the transaction by its ID
-        const transaction = await Transcation.findById(transactionId);
+        if (!mongoose.Types.ObjectId.isValid(transactionId)) {
+          throw new Error("Invalid transaction ID format");
+        }
+
+        // console.log("Transaction ID:", transactionId);
+
+        //const transaction = await Transaction.findById(id).exec();
+        const transaction = await Transaction.findById(transactionId)
+          .populate("userId")
+          .exec();
 
         if (!transaction) {
           throw new Error("Transaction not found");
         }
 
-        return transaction;
+        return { ...transaction.toObject(), user: transaction.userId };
       } catch (error) {
         console.error("Error fetching transaction:", error);
         throw new Error("Error fetching transaction");
       }
     },
-  },
+    //catergory
+    categoryStatistics: async (_, __, context) => {
+      try {
+        if (!context.getUser()) throw new Error("Unauthorized");
 
-  Mutation: {
+        const userId = context.getUser()._id;
+        const transactions = await Transaction.find({ userId });
+
+        const categoryMap = {};
+        transactions.forEach((transaction) => {
+          if (!categoryMap[transaction.category]) {
+            categoryMap[transaction.category] = 0; // Initialize category total
+          }
+          categoryMap[transaction.category] += transaction.amount; // Accumulate amount
+        });
+
+        return Object.entries(categoryMap).map(([category, totalAmount]) => ({
+          category,
+          totalAmount,
+        })); // Return the aggregated category statistics
+      } catch (error) {
+        console.error("Error fetching category statistics:", error);
+        throw new Error("Failed to fetch category statistics");
+      }
+    },
+    //
+  },
+  Mutation: {   
     // You can add resolvers for create, update, and delete transactions here
     //CREATE TRANSCATION
-    createTranscation: async (_, { input }, context) => {
+    createTransaction: async (_, { input }, context) => {
       try {
-        const newTranscation = new Transcation({
+        const newTransaction = new Transaction({
           ...input,
           userId: context.getUser()._id,
         });
-        await newTranscation.save();
-        return newTranscation;
+        await newTransaction.save();
+        return newTransaction;
       } catch (error) {
         console.error("Error fetching transaction:", error);
         throw new Error("Error fetching transaction");
@@ -57,34 +94,50 @@ const transcationResolvers = {
     },
     //UPDATE TRANSCATION
 
-    updateTranscation: async (_, { input }) => {
+    updateTransaction: async (_, { input }) => {
       try {
-        const updatedTranscation = await Transcation.findByIdAndUpdate(
+        const updatedTransaction = await Transaction.findByIdAndUpdate(
           input.transactionId,
           input,
           {
             new: true,
           }
         );
-        return updatedTranscation;
+        return updatedTransaction;
       } catch (error) {
         console.error("Error updating transcation", error);
         throw new Error("Error updating transcation");
       }
     },
-    deleteTranscation: async (_, { transactionId }) => {
+    deleteTransaction: async (_, { transactionId }) => {
       try {
-        const deletedTranscation = await Transcation.findByIdAndDelete(
+        const deletedTransaction = await Transaction.findByIdAndDelete(
           transactionId
         );
 
-        return deletedTranscation;
+        return deletedTransaction;
       } catch (error) {
         console.error("Error updating transcation", error);
         throw new Error("Error updating transcation");
       }
     },
   },
+  //
+
+  Transaction: {
+    user: async (transaction) => {
+      try {
+        const User = mongoose.model("User");
+        const user = await User.findById(transaction.userId).exec();
+        return user;
+      } catch (error) {
+        console.error("Error resolving user:", error);
+        return null; // Return null if the user cannot be found
+      }
+    },
+  },
+
+  //
 };
 
-export default transcationResolvers;
+export default transactionResolvers;

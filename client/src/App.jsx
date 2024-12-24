@@ -16,8 +16,8 @@ function App() {
   const { loading, data, error } = useQuery(GET_AUTHENTICATED_USER);
 
   if (loading) return null;
-    const authuser = data?.authUser;
-console.log(authuser);
+  const authuser = data?.authUser;
+  console.log(authuser);
 
   return (
     <>
@@ -35,12 +35,10 @@ console.log(authuser);
           path="/signup"
           element={!authuser ? <SignUpPage /> : <Navigate to="/" />}
         />
-
+ 
         <Route
           path="/transaction/:id"
-          element={
-            authuser ? <TransactionPage /> : <Navigate to="/login" />
-          }
+          element={authuser ? <TransactionPage /> : <Navigate to="/login" />}
         />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

@@ -4,6 +4,7 @@ import InputField from "../components/InputField";
 import { LOGIN } from "../graphql/mutations/user.mutation.js";
 import { useMutation } from "@apollo/client";
 import toast from "react-hot-toast";
+import { GET_AUTHENTICATED_USER } from "../graphql/queries/user.query.js";
 const LoginPage = () => {
   const [loginData, setLoginData] = useState({
     username: "",
@@ -11,7 +12,7 @@ const LoginPage = () => {
   });
 
   const [login, { loading }] = useMutation(LOGIN, {
-    refetchQueries: ["GetAuthenticatedUser"],
+    refetchQueries: [{ query: GET_AUTHENTICATED_USER }],
   });
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,7 +33,7 @@ const LoginPage = () => {
       console.log("error logging in ");
     }
   };
-
+   
   return (
     <div className="flex justify-center items-center h-screen">
       <div className="flex rounded-lg overflow-hidden z-50 bg-gray-300">
@@ -52,7 +53,6 @@ const LoginPage = () => {
                 value={loginData.username}
                 onChange={handleChange}
               />
-
               <InputField
                 label="Password"
                 id="password"
@@ -67,6 +67,7 @@ const LoginPage = () => {
                   className="w-full bg-black text-white p-2 rounded-md hover:bg-gray-800 focus:outline-none focus:bg-black  focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors duration-300
 										disabled:opacity-50 disabled:cursor-not-allowed
 									"
+                  GetAuthenticatedUser
                 >
                   {loading ? "loading" : "Login"}
                 </button>
@@ -78,6 +79,7 @@ const LoginPage = () => {
                 <Link to="/signup" className="text-black hover:underline">
                   Sign Up
                 </Link>
+                
               </p>
             </div>
           </div>
