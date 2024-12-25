@@ -16,7 +16,7 @@ const Cards = () => {
   if (error) {
     console.error("Error fetching transactions:", error);
   }
-  console.log(data);
+  
   return (
     <div className="w-full px-10 min-h-[40vh]">
       <p className="text-5xl font-bold text-center my-10">History</p>
@@ -29,9 +29,7 @@ const Cards = () => {
       {!loading && data?.transactions?.length === 0 && (
         <p className="text-2x1 front-bold text-center w-full ">
           No History of transaction found
-          <span className="block mt-2 text-blue-600 underline hover:text-blue-800">
-            <a href="/login">Login</a>
-          </span>
+          
         </p>
       )}
     </div>
