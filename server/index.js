@@ -15,7 +15,7 @@ import { ApolloServer } from "@apollo/server";
 import mergedTypeDefs from "./typeDefs/index.js";
 import mergedResolvers from "./resolvers/index.js";
 import { connectDB } from "./db/connection.js";
-/////package.json is located on graphql
+///package.json is located on graphql
 const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT;

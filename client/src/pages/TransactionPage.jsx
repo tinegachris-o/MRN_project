@@ -23,7 +23,7 @@ console.log("GetTransaction",data)
     UPDATE_TRANSACTION,
     {
       refetchQueries: [
-        { query: GET_TRANSACTIONS },
+        
         { query: GET_TRANSACTION_STATISTICS },
       ],
     }
