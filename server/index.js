@@ -6,7 +6,7 @@ import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import dotenv from "dotenv";
 dotenv.config();
-
+import path from "path";
 import passport from "passport";
 import session from "express-session";
 import ConnectMongo from "connect-mongodb-session";
@@ -15,11 +15,11 @@ import { ApolloServer } from "@apollo/server";
 import mergedTypeDefs from "./typeDefs/index.js";
 import mergedResolvers from "./resolvers/index.js";
 import { connectDB } from "./db/connection.js";
-
+/////package.json is located on graphql
 const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT;
-
+const __dirname = path.resolve();
 // Configure Passport
 configPassport();
 
@@ -30,7 +30,7 @@ await connectDB();
 // Configure MongoDB session store
 const mongoDBStore = ConnectMongo(session);
 const store = new mongoDBStore({
-  uri: process.env.MONGO_URL,
+  uri: process.env.CLOUD_MONGO_URL,
   collection: "sessions",
 });
 store.on("error", (error) => {
@@ -80,14 +80,18 @@ app.use(
   })
 );
 
+//npm build will build application
 
 //// Global error handling middleware
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).send("Something went wrong");
 });
-
+app.use(express.static(path.join(__dirname, "client/dist")));
 // Start the HTTP server
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "client/dist", index.html));
+});
 httpServer.listen(port, () => {
   console.log(`🚀 Server ready at http://localhost:${port}/graphql`);
 });

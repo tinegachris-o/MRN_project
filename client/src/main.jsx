@@ -5,7 +5,8 @@ import App from "./App.jsx";
 import { ApolloProvider, ApolloClient, InMemoryCache } from "@apollo/client";
 const client = new ApolloClient({
   //TODO UPDATE URL ON PRODUCTION
-  uri: "http://localhost:8000/graphql", // Replace with your GraphQL API endpoint
+  uri: import.meta.env.VITE_NODE_ENV ==="development"? "http://localhost:8000/graphql":"/graphql" ,
+  // Replace with your GraphQL API endpoint,
   cache: new InMemoryCache(),
   credentials:"include"
 });
