@@ -16,6 +16,7 @@ import mergedTypeDefs from "./typeDefs/index.js";
 import mergedResolvers from "./resolvers/index.js";
 import { connectDB } from "./db/connection.js";
 ///package.json is located on graphql
+import job from './cron.js'
 const app = express();
 const httpServer = http.createServer(app);
 let port = process.env.PORT;
@@ -26,7 +27,7 @@ configPassport();
 // Middlewares
 app.use(express.json());
 await connectDB();
-
+job.start()
 // Configure MongoDB session store
 const mongoDBStore = ConnectMongo(session);
 const store = new mongoDBStore({
