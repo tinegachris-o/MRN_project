@@ -2,7 +2,9 @@
 this project client can track his or her expenditure plan using application
 backend is intergrated by mongodb , graphql apollo server and express
 to test visit this link below 
-https://mrn-project.onrender.com/
+https://mrn-project.onrender.com
+ Build an Expense Tracker App
+
 
 🌟 Tech stack: MERN (MongoDB, Express.js, React.js, Node.js) + Apollo GraphQL
 📝 Learn type definitions and resolvers for defining GraphQL schema and data fetching logic
